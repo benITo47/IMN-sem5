@@ -1,0 +1,39 @@
+# Ignore compiled object files and executables
+*.o
+*.out
+*.exe
+
+# Ignore text output and data files
+*.txt
+*.log
+*.dat
+
+# Ignore image files
+*.png
+*.jpg
+*.jpeg
+*.gif
+
+# Ignore temporary files
+*.tmp
+*.swp
+*.swo
+
+# Ignore directories commonly used for builds
+/build/
+/bin/
+/obj/
+
+# Ignore editor and OS-specific files
+*~
+.DS_Store
+Thumbs.db
+
+# Only track source code, PDFs, and GNUplot scripts
+!.cpp
+!.h
+!.hpp
+!.pdf
+!.plt
+!.sh
+!.gnuplot
