@@ -14,17 +14,14 @@
 *.jpeg
 *.gif
 
-# Ignore temporary files
 *.tmp
 *.swp
 *.swo
 
-# Ignore directories commonly used for builds
 /build/
 /bin/
 /obj/
 
-# Ignore editor and OS-specific files
 *~
 .DS_Store
 Thumbs.db
