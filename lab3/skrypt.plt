@@ -3,8 +3,8 @@
 
 set terminal pngcairo size 800,600 enhanced font 'Arial,10'
 
-set style line 1 lt 1 lw 2 lc rgb "blue"  # TOL = 10^-2
-set style line 2 lt 1 lw 2 lc rgb "red"   # TOL = 10^-5
+set style line 1 lt 1 lw 2 lc rgb "red"  # TOL = 10^-2
+set style line 2 lt 1 lw 2 lc rgb "blue"   # TOL = 10^-5
 
 # Zestaw 1: Metoda RK2, wykres x(t) dla obu TOL
 set output 'RK2_x_t.png'
