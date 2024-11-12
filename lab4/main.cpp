@@ -23,8 +23,8 @@ const double TOL = 1e-8;
 double gestosc_RO(double x, double y) {
   double ro1 = exp(-(pow((x - 0.35 * X_MAX), 2) / pow(SIGMA_X, 2)) -
                    (pow(y - 0.5 * Y_MAX, 2)) / (pow(SIGMA_Y, 2)));
-  double ro2 = exp(-(pow((x - 0.65 * X_MAX), 2) / pow(SIGMA_X, 2)) -
-                   (pow(y - 0.5 * Y_MAX, 2)) / (pow(SIGMA_Y, 2)));
+  double ro2 = -exp(-(pow((x - 0.65 * X_MAX), 2) / pow(SIGMA_X, 2)) -
+                    (pow(y - 0.5 * Y_MAX, 2)) / (pow(SIGMA_Y, 2)));
   return ro1 + ro2;
 }
 
@@ -32,14 +32,14 @@ void relaksacja_globalna() {
   std::vector<double> omega_gs = {0.6, 1.0};
 
   for (double omega_g : omega_gs) {
-    // Inicjalizacja tablic potencjałów
+
+    // Inicjalizacja tablic dla starego i nowego potencjału V
     std::vector<std::vector<double>> v_stare(N_X + 1,
                                              std::vector<double>(N_Y + 1, 0.0));
     std::vector<std::vector<double>> v_nowe(N_X + 1,
                                             std::vector<double>(N_Y + 1, 0.0));
 
-    // Ustawienie warunków brzegowych Dirichleta na dolnym brzegu (V1) i górnym
-    // (V2)
+    // Ustawienie warunków brzegowych Dirichleta na dolnym brzegu (V1)
     for (int i = 0; i <= N_X; ++i) {
       v_stare[i][0] = V_1;
       v_stare[i][N_Y] = V_2;
@@ -47,13 +47,12 @@ void relaksacja_globalna() {
       v_nowe[i][N_Y] = V_2;
     }
 
-    // Inicjalizacja zmiennych do obliczeń
+    // Inicjalizacja macierzy błędów oraz zmiennych całki S i iteracji
     std::vector<std::vector<double>> err(N_X, std::vector<double>(N_Y, 0.0));
     double s_prev;
     double s_next = 0.0;
     int it = 0;
 
-    // Otwarcie plików do zapisów
     std::ofstream f_s("dane/globalna_s_" +
                       std::to_string(omega_g).substr(0, 3) + ".txt");
     std::ofstream f_v("dane/globalna_v_" +
@@ -61,13 +60,10 @@ void relaksacja_globalna() {
     std::ofstream f_err("dane/globalna_err_" +
                         std::to_string(omega_g).substr(0, 3) + ".txt");
 
-    std::cout << "Calculating with global relaxation for omega_g = " << omega_g
-              << "\n";
-
     while (true) {
       ++it;
 
-      // Obliczanie nowych wartości potencjału V w każdym węźle (oprócz brzegów)
+      // Obliczanie nowej wartości potencjału V w każdym węźle (oprócz brzegów)
       for (int i = 1; i < N_X; ++i) {
         for (int j = 1; j < N_Y; ++j) {
           v_nowe[i][j] =
@@ -78,13 +74,13 @@ void relaksacja_globalna() {
         }
       }
 
-      // Nałożenie warunków brzegowych Neumanna (po bokach)
+      // Nałożenie warunków brzegowych von Neumanna (po bokach)
       for (int j = 1; j < N_Y; ++j) {
-        v_nowe[0][j] = v_nowe[1][j];         // Lewy brzeg
-        v_nowe[N_X][j] = v_nowe[N_X - 1][j]; // Prawy brzeg
+        v_nowe[0][j] = v_nowe[1][j];
+        v_nowe[N_X][j] = v_nowe[N_X - 1][j];
       }
 
-      // Aktualizacja potencjału V przy użyciu relaksacji globalnej
+      // Aktualizacja wartości potencjału V przy użyciu relaksacji globalnej
       for (int i = 0; i <= N_X; ++i) {
         for (int j = 0; j <= N_Y; ++j) {
           v_stare[i][j] =
