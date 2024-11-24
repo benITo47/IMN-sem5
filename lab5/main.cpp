@@ -19,26 +19,28 @@ double VB3(double y) { return sin(M_PI * y / YMAX); }
 double VB4(double x) { return sin(2 * M_PI * x / XMAX); }
 
 // Relaksacja wielosiatkowa
-void multigridRelaxation() {
+void relaksacja() {
 
   std::vector<std::vector<double>> V(NX + 1, std::vector<double>(NY + 1, 0.0));
 
-  // Ustawiamy warunki brzegowe
+  for (int j = 0; j <= NY; ++j) {
+    double y = j * DY;
+    V[0][j] = VB1(y); // Lewy brzeg
+  }
   for (int i = 0; i <= NX; ++i) {
     double x = i * DX;
-    V[i][0] = VB4(x);  // Dolny brzeg
     V[i][NY] = VB2(x); // Górny brzeg
   }
   for (int j = 0; j <= NY; ++j) {
     double y = j * DY;
-    V[0][j] = VB1(y);  // Lewy brzeg
     V[NX][j] = VB3(y); // Prawy brzeg
   }
-
+  for (int i = 0; i <= NX; ++i) {
+    double x = i * DX;
+    V[i][0] = VB4(x); // Dolny brzeg
+  }
   int iteration = 0;
   for (int k : KS) {
-    int step = k;
-
     double S_prev = 0.0;
     double S_next;
 
@@ -50,27 +52,33 @@ void multigridRelaxation() {
       iteration++;
 
       // Iteracja relaksacji
-      std::vector<std::vector<double>> V_old = V;
-      for (int i = step; i <= NX - step; i += step) {
-        for (int j = step; j <= NY - step; j += step) {
-          V[i][j] = 0.25 * (V[i + step][j] + V[i - step][j] + V[i][j + step] +
-                            V[i][j - step]);
+      for (int i = k; i < NX; i += k) {
+        for (int j = k; j < NY; j += k) {
+          V[i][j] =
+              0.25 * (V[i + k][j] + V[i - k][j] + V[i][j + k] + V[i][j - k]);
         }
+      }
+      // Zapis do pliku
+      for (int i = 0; i <= NX; i += k) {
+        for (int j = 0; j <= NY; j += k) {
+          potential_file << i * DX << "\t" << j * DY << "\t" << V[i][j] << "\n";
+        }
+        potential_file << "\n"; // Odstep dla GNUPLOTa
       }
 
       // Obliczanie funkcji całkowej
 
       S_next = 0.0;
-      for (int i = 0; i <= NX - step; i += step) {
-        for (int j = 0; j <= NY - step; j += step) {
-          double term1_x = (V[i + step][j] - V[i][j] + V[i + step][j + step] -
-                            V[i][j + step]) /
-                           (2.0 * DX * step);
-          double term1_y = (V[i][j + step] - V[i][j] + V[i + step][j + step] -
-                            V[i + step][j]) /
-                           (2.0 * DY * step);
-          S_next += 0.5 * step * step * DX * DY *
-                    (term1_x * term1_x + term1_y * term1_y);
+      for (int i = 0; i <= NX - k; i += k) {
+        for (int j = 0; j <= NY - k; j += k) {
+          double term1_x =
+              (V[i + k][j] - V[i][j] + V[i + k][j + k] - V[i][j + k]) /
+              (2.0 * DX * k);
+          double term1_y =
+              (V[i][j + k] - V[i][j] + V[i + k][j + k] - V[i + k][j]) /
+              (2.0 * DY * k);
+          S_next +=
+              0.5 * k * k * 0.2 * 0.2 * (term1_x * term1_x + term1_y * term1_y);
         }
       }
 
@@ -84,40 +92,29 @@ void multigridRelaxation() {
       S_prev = S_next;
     }
 
-    // Zapis mapy potencjału
-    for (int i = 0; i <= NX; ++i) {
-      for (int j = 0; j <= NY; ++j) {
-        potential_file << i * DX << "\t" << j * DY << "\t" << V[i][j] << "\n";
-      }
-      potential_file << "\n"; // Dodatkowy odstęp dla czytelności
-    }
-
     // Zagęszczanie siatki
     if (k > 1) {
-      for (int i = 0; i < NX; i += step) {
-        for (int j = 0; j < NY; j += step) {
-          V[i + step / 2][j] = 0.5 * (V[i][j] + V[i + step][j]); // Pionowe
-          V[i][j + step / 2] = 0.5 * (V[i][j] + V[i][j + step]); // Poziome
-          V[i + step / 2][j + step / 2] =
-              0.25 * (V[i][j] + V[i + step][j] + V[i][j + step] +
-                      V[i + step][j + step]); // Nowe węzły
+      int k2 = k / 2;
+      for (int i = 0; i <= NX - k; i += k) {
+        for (int j = 0; j <= NY - k; j += k) {
+          V[i + k2][j + k2] =
+              0.25 * (V[i][j] + V[i + k][j] + V[i][j + k] + V[i + k][j + k]);
+          if (i != NX - k)
+            V[i + k][j + k2] = 0.5 * (V[i + k][j] + V[i + k][j + k]);
+
+          if (j != NY - k)
+            V[i + k2][j + k] = 0.5 * (V[i][j + k] + V[i + k][j + k]);
+          if (j != 0)
+            V[i + k2][j] = 0.5 * (V[i][j] + V[i + k][j]);
+          if (i != 0)
+            V[i][j + k2] = 0.5 * (V[i][j] + V[i][j + k]);
         }
       }
-    }
-    for (int i = 0; i <= NX; ++i) {
-      double x = i * DX;
-      V[i][0] = VB4(x);  // Dolny brzeg
-      V[i][NY] = VB2(x); // Górny brzeg
-    }
-    for (int j = 0; j <= NY; ++j) {
-      double y = j * DY;
-      V[0][j] = VB1(y);  // Lewy brzeg
-      V[NX][j] = VB3(y); // Prawy brzeg
     }
   }
 }
 
 int main() {
-  multigridRelaxation();
+  relaksacja();
   return 0;
 }
