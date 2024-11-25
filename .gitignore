@@ -26,6 +26,7 @@
 **/build/
 **/bin/
 **/obj/
+**/.cache/
 
 # Ignore system-specific files
 .DS_Store
