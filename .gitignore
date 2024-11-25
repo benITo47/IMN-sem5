@@ -1,3 +1,4 @@
+
 # Ignore compiled object files and executables
 *.o
 *.out
@@ -14,16 +15,19 @@
 *.jpeg
 *.gif
 
+# Ignore temporary files and system files
 *.tmp
 *.swp
 *.swo
 *.gitignore
-
-/build/
-/bin/
-/obj/
-
 *~
+
+# Ignore build folders everywhere
+**/build/
+**/bin/
+**/obj/
+
+# Ignore system-specific files
 .DS_Store
 Thumbs.db
 
@@ -36,3 +40,4 @@ Thumbs.db
 !.plt
 !.sh
 !.gnuplot
+
