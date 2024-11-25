@@ -29,6 +29,7 @@ Thumbs.db
 
 # Only track source code, PDFs, and GNUplot scripts
 !.cpp
+!.c
 !.h
 !.hpp
 !.pdf
