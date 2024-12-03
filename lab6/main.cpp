@@ -16,7 +16,6 @@ double rho(int i, int j, double xmax, double ymax, double sigma) {
              pow((DELTA * j - 0.5 * ymax) / sigma, 2)) -
          exp(-pow((DELTA * i - 0.75 * xmax) / sigma, 2) -
              pow((DELTA * j - 0.5 * ymax) / sigma, 2));
-  ;
 }
 
 int calculateJ(int l, int nx) { return l / (nx + 1); }
