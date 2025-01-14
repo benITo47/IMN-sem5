@@ -8,7 +8,7 @@
 
 class Varlete_Equation {
 private:
-  const int NX = 150;
+  const int NX = 151;
   const int NT = 1000;
   const double DELTA = 0.1;
   const double DELTA_T = 0.05;
@@ -65,10 +65,16 @@ public:
     }
   }
 
-  double calculate_Af(int i) {
-    const double xF = 2.5 / DELTA;
+  double calculate_Af(int i, int t) {
+    const double xF = 2.5;
     const double x = DELTA * i;
-    return (std::cos(50.0 * DELTA_T * i / (DELTA_T * NT)) * (x == xF));
+    if (x == 2.5) {
+      std::cout << "x" << x << std::endl;
+    }
+    const double time = t * DELTA_T;
+    double result = (std::cos((50.0 * time) / (DELTA_T * NT)));
+    // std::cout << "i" << i << "cos" << result << "\n";
+    return result * (x == xF);
   }
 
   void initialize_edge_condition() {
@@ -86,17 +92,17 @@ public:
     }
   }
 
-  void calculate_a() {
+  void calculate_a(int t) {
     for (int i = 1; i < NX - 1; i++) {
       a[i] = (U[i + 1] - 2 * U[i] + U[i - 1]) / (DELTA * DELTA) -
-             BETA * (U[i] - U_prev[i]) / DELTA_T + ALFA * calculate_Af(i);
+             BETA * (U[i] - U_prev[i]) / DELTA_T + ALFA * calculate_Af(i, t);
     }
   }
 
   double calculate_E() {
-    const double E_n = DELTA / 4.0 *
-                       (std::pow((U[1] - U[0]) / DELTA, 2) +
-                        std::pow((U[NX - 1] - U[NX - 2]) / DELTA, 2));
+    const double E_n =
+        (DELTA / 4.0) * (std::pow((U[1] - U[0]) / DELTA, 2) +
+                         std::pow((U[NX - 1] - U[NX - 2]) / DELTA, 2));
     double E_sum = 0.0;
 
     for (int i = 1; i < NX - 1; i++) {
@@ -104,7 +110,7 @@ public:
           std::pow(V[i], 2) + std::pow((U[i + 1] - U[i - 1]) / (2 * DELTA), 2);
     }
 
-    return E_n + (DELTA / 2.0 * E_sum);
+    return E_n + (DELTA / 2.0) * E_sum;
   }
 
   void solve() {
@@ -114,7 +120,7 @@ public:
     }
     U_prev = U;
 
-    calculate_a();
+    calculate_a(0);
 
     for (int t = 1; t <= NT; t++) {
       for (int i = 1; i < NX - 1; i++) {
@@ -126,7 +132,7 @@ public:
       for (int i = 1; i < NX - 1; i++) {
         U[i] = U[i] + DELTA_T * Vp[i];
       }
-      calculate_a();
+      calculate_a(t);
 
       for (int i = 1; i < NX - 1; i++) {
         V[i] = Vp[i] + DELTA_T / 2.0 * a[i];
